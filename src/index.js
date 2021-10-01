@@ -1,24 +1,24 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import App from './components/App';
 import reportWebVitals from './reportWebVitals';
-import { BrowserRouter, Switch, Route } from 'react-router-dom';
-import Login from './components/Auth/Login';
-import Register from './components/Auth/Register';
+import { BrowserRouter } from 'react-router-dom';
+import Root from './Root';
+import { createStore } from 'redux';
+import { composeWithDevTools } from 'redux-devtools-extension';
+import { Provider } from 'react-redux';
+import rootReducer from './reducers/index';
+
+
 import 'semantic-ui-css/semantic.min.css';
 
-const Root = () => (
-  <BrowserRouter>
-    <Switch>
-      <Route exact path='/' component={App} />
-      <Route exact path='/login' component={Login} />
-      <Route exact path='/register' component={Register} />
-    </Switch>
-  </BrowserRouter>
-)
+const store = createStore(rootReducer, composeWithDevTools());
 
 ReactDOM.render(
-  <Root />,
+  <Provider store={store}>
+    <BrowserRouter>
+      <Root />
+    </BrowserRouter>
+  </Provider>,
   document.getElementById('root')
 );
 
