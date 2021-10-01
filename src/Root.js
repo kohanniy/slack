@@ -8,13 +8,14 @@ import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from './firebase';
 import { useDispatch, useSelector } from 'react-redux';
 import {
-  setUser
+  setUser,
+  clearUser,
 } from './actions/index';
 
 function Root() {
   const history = useHistory();
   const dispatch = useDispatch();
-  const { currentUser, isLoading } = useSelector((state) => state);
+  const isLoading = useSelector((state) => state.user.isLoading);
 
 
   useEffect(() => {
@@ -23,8 +24,8 @@ function Root() {
         dispatch(setUser(user));
         history.push('/')
       } else {
-        // User is signed out
-        // ...
+        history.push('/login');
+        dispatch(clearUser());
       }
     });
   }, [dispatch, history]);

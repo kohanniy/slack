@@ -46,9 +46,7 @@ function Login() {
       const { email, password } = inputValues;
 
       try {
-        const userCredential = await signInWithEmailAndPassword(auth, email, password);
-        const user = userCredential.user;
-        console.log(user);
+        await signInWithEmailAndPassword(auth, email, password);
       } catch (err) {
         if (err.code === 'auth/wrong-password') {
           return setErrorMessage('Неверный пароль');
@@ -56,8 +54,6 @@ function Login() {
 
         setErrorMessage(err.message);
           
-      } finally {
-        setLoading(false);
       }
     }
   };
