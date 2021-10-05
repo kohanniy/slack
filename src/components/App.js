@@ -11,7 +11,7 @@ import MetaPanel from './MetaPanel/MetaPanel';
 function App() {
   return (
     <Grid
-      column='equal'
+      columns='equal'
       className='app'
       style={{ background: '#eee' }}
     >
