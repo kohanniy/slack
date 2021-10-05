@@ -1,14 +1,10 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Button, Form, Icon, Input, Menu, Modal } from 'semantic-ui-react';
-import { ref, push, child, update, get } from 'firebase/database';
-import { db } from '../../firebase';
 import { useDispatch, useSelector } from 'react-redux';
 import { setCurrentChannel } from '../../actions/index';
+import { saveDataToDatabase, childAddedListener, removeListeners } from '../../firebase/firebaseApi';
 
 function Channels() {
-  const channelsRef = child(ref(db), 'channels');
-  const updatesChannels = {};
-
   const [channels, setChannels] = useState([]);
   const [ modalOpen, setModalOpen ] = useState(false);
   const [ inputValues, setInputValues ] = useState({});
@@ -31,75 +27,61 @@ function Channels() {
 
   const setFirstChannel = useCallback(() => {
     const firstChannel = channels[0];
-    if (firstLoad && channels.length > 0) {
-      dispatch(setCurrentChannel(firstChannel));
-      setActiveChannel(firstChannel.id);
-    }
+    dispatch(setCurrentChannel(firstChannel));
+    setActiveChannel(firstChannel?.id);
     setFirstLoad(false);
-  }, [channels, dispatch, firstLoad]);
-
-  const getChannels = useCallback(async () => {
-    try {
-      const snapshot = await get(channelsRef);
-      if (snapshot.val()) {
-        const data = snapshot.val();
-        const keys = Object.keys(data);
-        const channelsArray = keys.map((key) => data[key]);
-        setChannels(channelsArray);
-        setFirstChannel();
-      }
-    } catch (err) {
-      console.log(err.code);
-    }
-  }, [channelsRef, setFirstChannel]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dispatch, firstLoad]);
 
   const changeChannel = (channel) => {
     setActiveChannel(channel.id);
     dispatch(setCurrentChannel(channel));
   };
 
-  useEffect(() => {
-    getChannels();
-  }, [getChannels]);
+  const handleChannelsAdded = useCallback((data) => {
+    let loadedChannels = [];
+
+    data.forEach((item) => {
+      loadedChannels.push(item.val())
+    });
+
+    setChannels(loadedChannels);
+    setFirstChannel();
+  }, [setFirstChannel]);
 
   const isFormValid = ({ channelName, channelDetails }) => channelName && channelDetails;
-
-  const addChannel = async (inputValues) => {
-    const { channelName, channelDetails } = inputValues;
-    const newChannelKey = push(channelsRef).key;
-
-    const channelData = {
-      id: newChannelKey,
-      name: channelName,
-      details: channelDetails,
-      createdBy: {
-        name: displayName,
-        avatar: photoURL
-      }
-    };
-    
-    updatesChannels['/channels/' + newChannelKey] = channelData;
-
-    try {
-      await update(ref(db), updatesChannels);
-      getChannels();
-    } catch (err) {
-      console.log(err.message);
-    } finally {
-      setInputValues({});
-      setModalOpen(false)
-    }
-  }
 
   const handleSubmit = async (evt) => {
     evt.preventDefault();
 
     if (isFormValid(inputValues)) {
-      addChannel(inputValues);
+      try {
+        const { channelName, channelDetails } = inputValues;
+        const channelData = {
+          id: '',
+          name: channelName,
+          details: channelDetails,
+          createdBy: {
+            name: displayName,
+            avatar: photoURL
+          }
+        };
+        await saveDataToDatabase('channels', 'channels', channelData);
+      } catch (err) {
+        console.log(err);
+      } finally {
+        setInputValues({});
+        setModalOpen(false);
+      }
     }
   };
 
-  const displayChannels = (channels) => channels.map((channel) => (
+  useEffect(() => {
+    childAddedListener('channels', handleChannelsAdded)
+    return () => removeListeners('channels');
+  }, [handleChannelsAdded]);
+
+  const displayChannels = (channels) => channels.length > 0 && channels.map((channel) => (
     <Menu.Item
       key={channel.id}
       onClick={() => changeChannel(channel)}
@@ -109,7 +91,7 @@ function Channels() {
     >
       # {channel.name}
     </Menu.Item>
-  ))
+  ));
   
   return (
     <>
@@ -157,4 +139,4 @@ function Channels() {
   )
 }
 
-export default Channels
+export default Channels;

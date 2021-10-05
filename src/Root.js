@@ -4,9 +4,8 @@ import Register from './components/Auth/Register';
 import App from './components/App';
 import Spinner from './Spinner';
 import { useEffect } from 'react';
-import { onAuthStateChanged } from 'firebase/auth';
-import { auth } from './firebase';
 import { useDispatch, useSelector } from 'react-redux';
+import { setAuthenticationState } from './firebase/firebaseApi';
 import {
   setUser,
   clearUser,
@@ -17,9 +16,8 @@ function Root() {
   const dispatch = useDispatch();
   const isLoading = useSelector((state) => state.user.isLoading);
 
-
   useEffect(() => {
-    onAuthStateChanged(auth, (user) => {
+    const setUserRoute = (user) => {
       if (user) {
         dispatch(setUser(user));
         history.push('/')
@@ -27,7 +25,8 @@ function Root() {
         history.push('/login');
         dispatch(clearUser());
       }
-    });
+    }
+    setAuthenticationState(setUserRoute);
   }, [dispatch, history]);
 
   return (
@@ -36,11 +35,11 @@ function Root() {
     ) : (
       <Switch>
         <Route exact path='/' component={App} />
-        <Route exact path='/login' component={Login} />
         <Route exact path='/register' component={Register} />
+        <Route exact path='/login' component={Login} />
       </Switch>
     )
   )
 }
 
-export default Root
+export default Root;

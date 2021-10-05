@@ -1,19 +1,11 @@
 import React from 'react';
 import { Grid, Header, Icon, Dropdown, Image } from 'semantic-ui-react';
-import { signOut } from 'firebase/auth';
-import { auth } from '../../firebase';
-import { useSelector } from 'react-redux';
 
-function UserPanel() {
-  const currentUser = useSelector((state) => state.user.currentUser);
-
-  const handleSignOut = async () => {
-    try {
-      await signOut(auth);
-    } catch(err) {
-      console.log(err);
-    }
-  };
+function UserPanel(props) {
+  const {
+    currentUser,
+    handleSignOut,
+  } = props;
 
   const dropdownOptions = () => ([
     {

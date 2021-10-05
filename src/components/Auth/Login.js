@@ -10,8 +10,7 @@ import {
   GridColumn,
 } from 'semantic-ui-react';
 import { Link } from 'react-router-dom';
-import { signInWithEmailAndPassword } from 'firebase/auth';
-import { auth } from '../../firebase';
+import { registerOrLoginUser } from '../../firebase/firebaseApi';
 
 function Login() {
   const [inputValues, setInputValues] = useState({
@@ -43,17 +42,19 @@ function Login() {
     if (isFormValid(inputValues)) {
       setErrorMessage('');
       setLoading(true);
-      const { email, password } = inputValues;
 
       try {
-        await signInWithEmailAndPassword(auth, email, password);
+        await registerOrLoginUser(inputValues, 'login');
       } catch (err) {
-        if (err.code === 'auth/wrong-password') {
-          return setErrorMessage('Неверный пароль');
+        setLoading(false);
+        switch (err.code) {
+          case 'auth/wrong-password': 
+            return setErrorMessage('Неверные почта или пароль');
+          case 'auth/user-not-found':
+            return setErrorMessage('Такого пользователя нет в базе. Зарегистрируйтесь');
+          default: 
+            return setErrorMessage(err.message);
         }
-
-        setErrorMessage(err.message);
-          
       }
     }
   };

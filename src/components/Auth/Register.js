@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import md5 from 'md5';
 import {
   Grid,
   Form,
@@ -11,9 +10,11 @@ import {
   GridColumn,
 } from 'semantic-ui-react';
 import { Link } from 'react-router-dom';
-import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
-import { ref, set } from 'firebase/database';
-import { auth, db } from '../../firebase';
+import { 
+  registerOrLoginUser,
+  addNameAndAvatarToUserProfile,
+  saveUserToDatabase,
+} from '../../firebase/firebaseApi';
 
 function Register() {
   const [ inputValues, setInputValues ] = useState({
@@ -56,20 +57,6 @@ function Register() {
     }
   };
 
-  const addNameAndAvatarToUserProfile = async (user) => {
-    return await updateProfile(user, {
-      displayName: inputValues.username,
-      photoURL: `http://gravatar.com/avatar/${md5(user.email)}?d=identicon`
-    });
-  };
-
-  const saveUser = (user) => {
-    return set(ref(db, `users/${user.uid}`), {
-      name: user.displayName,
-      avatar: user.photoURL
-    });
-  };
-
   const handleSubmit = async (evt) => {
     evt.preventDefault();
 
@@ -78,15 +65,17 @@ function Register() {
       setErrorMessage('');
 
       try {
-        const { email, password } = inputValues;
-        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-        const user = userCredential.user;
-        await addNameAndAvatarToUserProfile(user);
-        saveUser(user);
+        const { user } = await registerOrLoginUser(inputValues, 'register');
+        await addNameAndAvatarToUserProfile(inputValues);
+        await saveUserToDatabase(user);
       } catch (err) {
-        setErrorMessage(err.message);
-      } finally {
         setLoading(false);
+        switch (err.code) {
+          case 'auth/email-already-in-use':
+            return setErrorMessage('Такой пользователь уже существует. Войдите в приложение');
+          default:
+            setErrorMessage(err.message);
+        }
       }
     }
   };
