@@ -11,9 +11,8 @@ function UserPanel() {
     try {
       await signOut(auth);
     } catch(err) {
-
+      console.log(err);
     }
-
   };
 
   const dropdownOptions = () => ([
