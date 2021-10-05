@@ -7,7 +7,7 @@ function UserPanel(props) {
     handleSignOut,
   } = props;
 
-  const dropdownOptions = () => ([
+  const dropdownOptions = [
     {
       key: 'user',
       text: <span>Войти как <strong>{currentUser.displayName}</strong></span>,
@@ -19,9 +19,10 @@ function UserPanel(props) {
     },
     {
       key: 'signout',
-      text: <span onClick={handleSignOut}>Выйти</span>,
+      text: <span>Выйти</span>,
+      handler: handleSignOut,
     },
-  ]);
+  ];
 
   return (
     <Grid
@@ -60,8 +61,21 @@ function UserPanel(props) {
                   {currentUser.displayName}
                 </span>
               }
-              options={dropdownOptions()}
-            />
+            >
+              <Dropdown.Menu>
+                {
+                  dropdownOptions.map((option) => (
+                    <Dropdown.Item 
+                      key={option.key} 
+                      disabled={option.disabled}
+                      onClick={option.handler}
+                    >
+                      {option.text}
+                    </Dropdown.Item>
+                  ))
+                }
+              </Dropdown.Menu>
+            </Dropdown>
           </Header>
         </Grid.Row>
       </Grid.Column>
