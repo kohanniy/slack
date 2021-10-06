@@ -8,7 +8,6 @@ import { composeWithDevTools } from 'redux-devtools-extension';
 import { Provider } from 'react-redux';
 import rootReducer from './reducers/index';
 
-
 import 'semantic-ui-css/semantic.min.css';
 
 const store = createStore(rootReducer, composeWithDevTools());

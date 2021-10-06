@@ -65,8 +65,8 @@ function UserPanel(props) {
               <Dropdown.Menu>
                 {
                   dropdownOptions.map((option) => (
-                    <Dropdown.Item 
-                      key={option.key} 
+                    <Dropdown.Item
+                      key={option.key}
                       disabled={option.disabled}
                       onClick={option.handler}
                     >

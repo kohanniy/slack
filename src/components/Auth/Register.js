@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useHistory } from 'react-router-dom';
 import {
   Grid,
   Form,
@@ -26,6 +27,8 @@ function Register() {
 
   const [ errorMessage, setErrorMessage ] = useState('');
   const [ loading, setLoading ] = useState(false);
+
+  const history = useHistory();
 
   const handleChange = (evt) => {
     const name = evt.target.name;
@@ -68,6 +71,7 @@ function Register() {
         const { user } = await registerOrLoginUser(inputValues, 'register');
         await addNameAndAvatarToUserProfile(inputValues);
         await saveUserToDatabase(user);
+        history.push('/');
       } catch (err) {
         setLoading(false);
         switch (err.code) {

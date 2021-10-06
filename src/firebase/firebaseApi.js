@@ -70,7 +70,7 @@ export const saveUserToDatabase = async (user) => {
 export const saveDataToDatabase = async (colName, path, savedData) => {
   const newDataKey = push(child(dbRef, colName)).key;
 
-  if ('id' in savedData) {
+  if ('id' in savedData && savedData.id === '') {
     savedData.id = newDataKey
   }
 
@@ -81,12 +81,11 @@ export const saveDataToDatabase = async (colName, path, savedData) => {
   return await update(dbRef, updates);
 };
 
-// Добавление слушателя, который следит за изменениями детей
+// Добавление слушателя, который следит за изменениями у детей
 export const childAddedListener = (path, callback) => {
   const colRef = ref(db, `${path}`);
   return onValue(colRef, callback);
 };
-
 
 // Удаление всех слушателей
 export const removeListeners = (path) => {
