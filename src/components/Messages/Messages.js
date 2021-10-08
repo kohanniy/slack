@@ -1,28 +1,30 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
-import { serverTimestamp } from 'firebase/database';
-import { saveDataToDatabase, childAddedListener, removeListeners } from '../../firebase/firebaseApi';
+import { 
+  saveDataToDatabase, 
+  childAddedListener, 
+  removeListeners,
+  dispatchTime,
+  saveMediaFilesToStorage,
+  setMediaUploadProgressWatcher,
+  getLinkToUploadedFile,
+} from '../../firebase/firebaseApi';
 import { Segment, Comment } from 'semantic-ui-react';
 import MessagesHeader from './MessagesHeader';
 import MessagesForm from './MessagesForm';
 import Message from './Message';
 import Spinner from '../../Spinner';
 import { v4 as uuidv4 } from 'uuid';
-import { ref as storageRef, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
-
-import { storage } from '../../firebase/firebaseApi';
 
 function Messages() {
-  
-  const [messages, setMessages] = useState();
-  const [messagesLoading, setMessagesLoading] = useState(true);
-  const [message, setMessage] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [errors, setErrors] = useState([]);
+  const [ messages, setMessages ] = useState();
+  const [ messagesLoading, setMessagesLoading ] = useState(true);
+  const [ message, setMessage ] = useState('');
+  const [ loading, setLoading ] = useState(false);
+  const [ errors, setErrors ] = useState([]);
   const [ uploadState, setUploadState ] = useState('');
   const [ uploadTask, setUploadTask ] = useState(null);
   const [ percentUploaded, setPercentUploaded ] = useState(0);
-  const [ progressBar, setProgressBar ] = useState(false);
 
   const currentChannel = useSelector(state => state.channel.currentChannel);
   const currentUser = useSelector(state => state.user.currentUser);
@@ -34,7 +36,7 @@ function Messages() {
 
   const createMessageData = useCallback((fileURL = null) => {
     const messageData = {
-      timestamp: serverTimestamp(),
+      timestamp: dispatchTime,
       user: {
         id: currentUser.uid,
         name: currentUser.displayName,
@@ -52,12 +54,10 @@ function Messages() {
   }, [currentUser, message]);
 
   const uploadFile = (file, metadata) => {
-
     const filePath = `chat/public/${uuidv4()}.jpg`;
-    const refStorage = storageRef(storage, filePath);
 
     setUploadState('uploading');
-    setUploadTask(uploadBytesResumable(refStorage, file, metadata))
+    setUploadTask(saveMediaFilesToStorage(filePath, file, metadata))
   };
 
   const sendMessage = useCallback(async (fileURL = null) => {
@@ -86,41 +86,25 @@ function Messages() {
     }
   }, [createMessageData, currentChannel, errors, message]);
 
-  // const isProgressBarVisible = (percent) => {
-  //   if (percent > 0 && percent !== 100) {
-  //     setProgressBar(true);
-  //   } else {
-  //     setProgressBar(false)
-  //   }
-  // };
+  const handleUploadProgress = (progress) => setPercentUploaded(progress);
 
-  useEffect(() => {
-    if (uploadTask !== null) {
-      uploadTask.on('state_changed',
-        (snapshot) => {
-          const progress = Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 100);
-          // isProgressBarVisible(progress);
-          setPercentUploaded(progress);
-        },
-        (error) => {
-          setErrors([...errors, error]);
-          setUploadState('error');
-          setUploadTask(null);
-        },
-        async () => {
-          try {
-            const downLoadURL = await getDownloadURL(uploadTask.snapshot.ref);
-            sendMessage(downLoadURL);
-            setUploadTask(null);
-          } catch (err) {
-            setErrors([...errors, err]);
-            setUploadState('error');
-            setUploadTask(null);
-          }
-        }
-      );
+  const handleUploadError = useCallback((error) => {
+    setErrors([...errors, error]);
+    setUploadState('error');
+    setUploadTask(null);
+  }, [errors]);
+
+  const handleUploadSuccess = useCallback(async (ref) => {
+    try {
+      const downLoadURL = await getLinkToUploadedFile(ref);
+      sendMessage(downLoadURL);
+      setUploadTask(null);
+    } catch (err) {
+      setErrors([...errors, err]);
+      setUploadState('error');
+      setUploadTask(null);
     }
-  }, [errors, sendMessage, uploadTask]);
+  }, [errors, sendMessage]);
 
   const handleMessageAdded = useCallback((data) => {
     let loadedMessages = [];
@@ -148,6 +132,17 @@ function Messages() {
     
     return () => removeListeners(`messages/${currentChannel?.id}`)
   }, [currentChannel, handleMessageAdded]);
+
+  useEffect(() => {
+    if (uploadTask !== null) {
+      setMediaUploadProgressWatcher(
+        uploadTask,
+        handleUploadProgress,
+        handleUploadError,
+        handleUploadSuccess
+      );
+    }
+  }, [handleUploadError, handleUploadSuccess, uploadTask]);
 
   return (
     <>

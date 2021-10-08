@@ -17,8 +17,14 @@ import {
   update,
   onValue,
   off,
+  serverTimestamp,
  } from 'firebase/database';
-import { getStorage } from 'firebase/storage';
+import { 
+  getStorage,
+  ref as storageRef, 
+  uploadBytesResumable, 
+  getDownloadURL
+} from 'firebase/storage';
 import firebaseConfig from './firebaseConfig';
 
 const app = initializeApp(firebaseConfig);
@@ -46,7 +52,6 @@ export const registerOrLoginUser = async (userData, operation = 'register') => {
 export const signOutUser = async () => {
   return await signOut(auth);
 };
-
 
 // Добавление имени и аватара к профилю пользователя
 export const addNameAndAvatarToUserProfile = async (userData) => {
@@ -96,6 +101,31 @@ export const removeListeners = (path) => {
 // Установить наблюдателя за состоянием аутентификации
 export const setAuthenticationState = (setUserRoute) => {
   return onAuthStateChanged(auth, setUserRoute);
+};
+
+// Время отправки сообщения или файла
+export const dispatchTime = serverTimestamp();
+
+// Сохранение медиафайлов в Storage
+export const saveMediaFilesToStorage = (filePath, file, metadata) => {
+  const refStorage = storageRef(storage, filePath);
+  return uploadBytesResumable(refStorage, file, metadata);
+};
+
+// Получить ссылку на загруженный в Storage файл
+export const getLinkToUploadedFile = async (ref) => {
+  return await getDownloadURL(ref);
+};
+// Установить наблюдателя за состоянием загрузки медиафайлов
+export const setMediaUploadProgressWatcher = (uploadTask, progressHandling, errorHandling, successHanding) => {
+  return uploadTask.on('state_changed',
+    (snapshot) => {
+      const progress = Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 100);
+      progressHandling(progress);
+    },
+    (error) => errorHandling(error),
+    () => successHanding(uploadTask.snapshot.ref),
+  );
 }
 
 export default app;
