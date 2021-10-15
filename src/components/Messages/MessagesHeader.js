@@ -1,10 +1,16 @@
 import React from 'react';
 import { Header, Segment, Input, Icon } from 'semantic-ui-react';
 
-function MessagesHeader() {
+function MessagesHeader(props) {
+  const {
+    channelName,
+    numUniqueUsers,
+    handleChange,
+    searchLoading,
+  } = props;
+
   return (
     <Segment clearing>
-      {/* Channel Title */}
       <Header
         fluid='true'
         as='h2'
@@ -12,15 +18,17 @@ function MessagesHeader() {
         style={{ marginBottom: 0 }}
       >
         <span>
-          Канал
+          {channelName}
           <Icon name={'star outline'} color='black' />
         </span>
         <Header.Subheader>
-          2 пользователя
+          {numUniqueUsers}
         </Header.Subheader>
       </Header>
       <Header floated='right'>
-        <Input 
+        <Input
+          loading={searchLoading}
+          onChange={handleChange}
           size='mini'
           icon='search'
           name='searchTerm'

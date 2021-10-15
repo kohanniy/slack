@@ -18,6 +18,7 @@ import {
   onValue,
   off,
   serverTimestamp,
+  onDisconnect,
  } from 'firebase/database';
 import { 
   getStorage,
@@ -33,6 +34,7 @@ export const db = getDatabase();
 export const storage = getStorage(app);
 
 const dbRef = ref(db);
+const usersRef = ref(db, 'users');
 
 // Регистрация и вход пользователя
 export const registerOrLoginUser = async (userData, operation = 'register') => {
@@ -66,8 +68,10 @@ export const addNameAndAvatarToUserProfile = async (userData) => {
 // Сохранение пользователя в базе
 export const saveUserToDatabase = async (user) => {
   return await set(ref(db, `users/${user.uid}`), {
+    uid: user.uid,
     name: user.displayName,
-    avatar: user.photoURL
+    avatar: user.photoURL,
+    status: '',
   });
 };
 
@@ -126,6 +130,30 @@ export const setMediaUploadProgressWatcher = (uploadTask, progressHandling, erro
     (error) => errorHandling(error),
     () => successHanding(uploadTask.snapshot.ref),
   );
-}
+};
+
+// Определение статуса пользователя: в онлайне или в оффлайне
+export const statusUser = (user) => {
+  const path = `users/${user.uid}`;
+  const myConnectionsRef = ref(db, `${path}/connections`);
+
+  // stores the timestamp of my last disconnect (the last time I was seen online)
+  const lastOnlineRef = ref(db, `${path}/lastOnline`);
+
+  const connectedRef = ref(db, '.info/connected');
+  onValue(connectedRef, (snap) => {
+    if (snap.val() === true) {
+      const con = push(myConnectionsRef);
+      user.status = 'online'
+      onDisconnect(con).remove();
+      set(con, true);
+      onDisconnect(lastOnlineRef).set(serverTimestamp());
+    } else {
+      user.status = 'offline'
+    }
+    return update(usersRef, user);
+  });
+};
+
 
 export default app;

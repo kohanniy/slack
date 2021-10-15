@@ -2,8 +2,6 @@ import { useCallback, useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { 
   saveDataToDatabase, 
-  childAddedListener, 
-  removeListeners,
   dispatchTime,
   saveMediaFilesToStorage,
   setMediaUploadProgressWatcher,
@@ -13,26 +11,29 @@ import { Segment, Comment } from 'semantic-ui-react';
 import MessagesHeader from './MessagesHeader';
 import MessagesForm from './MessagesForm';
 import Message from './Message';
-import Spinner from '../../Spinner';
 import { v4 as uuidv4 } from 'uuid';
+import { declOfNum } from '../../utils/utils';
+import { participantForms } from '../../utils/constants';
+import useChildAddedListener from '../../hooks/useChildAddedListener';
 
 function Messages() {
-  const [ messages, setMessages ] = useState();
-  const [ messagesLoading, setMessagesLoading ] = useState(true);
+  const currentChannel = useSelector(state => state.channel.currentChannel);
+  const currentUser = useSelector(state => state.user.currentUser);
+
+  const {data: messages} = useChildAddedListener(`messages/${currentChannel?.id}`)
+
   const [ message, setMessage ] = useState('');
   const [ loading, setLoading ] = useState(false);
   const [ errors, setErrors ] = useState([]);
   const [ uploadState, setUploadState ] = useState('');
   const [ uploadTask, setUploadTask ] = useState(null);
   const [ percentUploaded, setPercentUploaded ] = useState(0);
+  const [ numUniqueUsers, setNumUniqueUsers ] = useState('');
+  const [ searchTerm, setSearchTerm ] = useState('');
+  const [ searchLoading, setSearchLoading ] = useState(false);
+  const [ searchResults, setSearchResults ] = useState([]);
 
-  const currentChannel = useSelector(state => state.channel.currentChannel);
-  const currentUser = useSelector(state => state.user.currentUser);
-
-  const handleChange = (evt) => {
-    const value = evt.target.value;
-    setMessage(value)
-  };
+  const handleChange = evt => setMessage(evt.target.value);
 
   const createMessageData = useCallback((fileURL = null) => {
     const messageData = {
@@ -88,6 +89,19 @@ function Messages() {
 
   const handleUploadProgress = (progress) => setPercentUploaded(progress);
 
+  const countUniqueUsers = (messages) => {
+    const uniqueUsers = messages.reduce((acc, message) => {
+      if (!acc.includes(message.user.name)) {
+        acc.push(message.user.name);
+      }
+
+      return acc;
+    }, []);
+
+    const numUniqueUsers = `${uniqueUsers.length} ${declOfNum(uniqueUsers.length, participantForms)}`;
+    setNumUniqueUsers(numUniqueUsers)
+  }
+
   const handleUploadError = useCallback((error) => {
     setErrors([...errors, error]);
     setUploadState('error');
@@ -106,15 +120,6 @@ function Messages() {
     }
   }, [errors, sendMessage]);
 
-  const handleMessageAdded = useCallback((data) => {
-    let loadedMessages = [];
-    data.forEach((item) => {
-      loadedMessages.push(item.val())
-    });
-    setMessages(loadedMessages);
-    setMessagesLoading(false);
-  }, []);
-
   const displayMessages = (messages) => {
     if (messages && messages.length > 0) {
       return messages.map((message) => (
@@ -127,11 +132,21 @@ function Messages() {
     }
   };
 
+  const handleSearchMessages = useCallback(() => {
+    const regex = new RegExp(searchTerm, 'gi');
+    const searchResults = messages.reduce((acc, message) => {
+      if (message.content && message.content.match(regex)) {
+        acc.push(message);
+      }
+      return acc;
+    }, []);
+    setSearchResults(searchResults);
+    setSearchLoading(false);
+  }, [messages, searchTerm]);
+
   useEffect(() => {
-    childAddedListener(`messages/${currentChannel?.id}`, handleMessageAdded);
-    
-    return () => removeListeners(`messages/${currentChannel?.id}`)
-  }, [currentChannel, handleMessageAdded]);
+    countUniqueUsers(messages)
+  }, [messages]);
 
   useEffect(() => {
     if (uploadTask !== null) {
@@ -144,15 +159,31 @@ function Messages() {
     }
   }, [handleUploadError, handleUploadSuccess, uploadTask]);
 
+  useEffect(() => {
+    handleSearchMessages();
+  }, [handleSearchMessages]);
+
+  const displayChannelName = channel => channel ? `#${channel.name}` : '';
+
+  const handleSearchChange = (evt) => {
+    setSearchTerm(evt.target.value);
+    setSearchLoading(true);
+  };
+
   return (
     <>
-      <MessagesHeader />
+      <MessagesHeader 
+        channelName={displayChannelName(currentChannel)}
+        numUniqueUsers={numUniqueUsers}
+        handleChange={handleSearchChange}
+        searchLoading={searchLoading}
+      />
       <Segment>
         <Comment.Group className={uploadState === 'uploading' ? 'messages__progress' : 'messages'}>
           {
-            messagesLoading ? (
-              <Spinner />
-            ) : displayMessages(messages)
+            searchTerm
+              ? displayMessages(searchResults)
+              : displayMessages(messages)
           }
         </Comment.Group>
         <MessagesForm

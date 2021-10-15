@@ -2,6 +2,7 @@ import React from 'react';
 import { Menu } from 'semantic-ui-react';
 import Channels from './Channels';
 import UserPanel from './UserPanel';
+// import DirectMessages from './DirectMessages';
 import { useSelector } from 'react-redux';
 import { signOutUser } from '../../firebase/firebaseApi';
 
@@ -31,6 +32,7 @@ function SidePanel() {
         handleSignOut={handleSignOut}
       />
       <Channels />
+      {/* <DirectMessages currentUser={currentUser} /> */}
     </Menu>
   )
 }

@@ -53,6 +53,7 @@ const MessagesForm = memo(function MessagesForm(props) {
           content='Добавить файл'
           labelPosition='right'
           icon='cloud upload'
+          disabled={uploadState === 'uploading'}
         />
       </Button.Group>
       <FileModal
