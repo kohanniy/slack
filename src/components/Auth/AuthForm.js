@@ -5,6 +5,7 @@ import {
   Segment,
   Button,
   Message,
+  Label
 } from 'semantic-ui-react';
 import {
   registerInputsData,
@@ -43,7 +44,14 @@ function AuthForm(props) {
         <Segment stacked>
           {
             inputsData().map((input, index) => (
-              <Fragment key={`${index}${input.name}`}>
+              <Form.Field key={`${index}${input.name}`}>
+                {
+                  errors[input.name] && (
+                    <Label basic color='red' pointing='below'>
+                      {errors[input.name].message}
+                    </Label>
+                  )
+                }
                 <Controller
                   name={input.name}
                   control={control}
@@ -64,14 +72,7 @@ function AuthForm(props) {
                     />
                   )}
                 />
-                {
-                  errors[input.name] && (
-                    <Message error>
-                      <p>{errors[input.name].message}</p>
-                    </Message>
-                  )
-                }
-              </Fragment>
+              </Form.Field>
             ))
           }
           <Button

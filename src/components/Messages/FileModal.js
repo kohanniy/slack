@@ -1,60 +1,72 @@
-import React, { useState } from 'react';
-import { Modal, Input, Button, Icon } from 'semantic-ui-react';
-import mime from 'mime-types';
+import { useState } from 'react';
+import { useForm, Controller } from 'react-hook-form';
+import { Modal, Input, Button, Icon, Label } from 'semantic-ui-react';
+import { validateUploadImageRules } from '../../utils/utils';
+
 
 function FileModal(props) {
   const {
     open,
     closeModal,
-    uploadFile,
+    onSubmit
   } = props;
 
-  const [ file, setFile ] = useState(null);
-  const correctFileType = ['image/jpeg', 'image/jpg', 'image/png'];
+  const { control, handleSubmit, formState, reset } = useForm();
 
-  const handleAddFile = (evt) => {
-    const file = evt.target.files[0];
-    if (file) {
-      setFile(file);
-    }
+  const [value, setValue] = useState('');
+
+  const resetForm = () => {
+    closeModal();
+    setValue('');
+    reset();
   };
 
-  const isCorrectFileType = (fileName) => {
-    return correctFileType.includes(mime.lookup(fileName))
-  };
-
-  const clearFile = () => {
-    setFile(null);
-  }
-
-  const sendFile = () => {
-    if (file !== null) {
-      if (isCorrectFileType(file.name)) {
-        const metadata = { contentType: mime.lookup(file.name)};
-        uploadFile(file, metadata);
-        closeModal();
-        clearFile();
-      }
-    }
+  const sendImage = (data) => {
+    onSubmit(data);
+    resetForm();
   };
 
   return (
-    <Modal basic open={open} onClose={closeModal}>
+    <Modal basic open={open} onClose={resetForm}>
       <Modal.Header>Выберите изображение</Modal.Header>
       <Modal.Content>
-        <Input
-          fluid
-          label='Допустимые типы файлов: jpg, png'
+        {
+          formState.errors.file && (
+            <Label basic color='red' pointing='below'>
+              {formState.errors.file.message}
+            </Label>
+          )
+        }
+        <Controller
           name='file'
-          type='file'
-          onChange={handleAddFile}
+          control={control}
+          rules={{
+            required: 'Выберите файл',
+            validate: validateUploadImageRules,
+          }}
+          render={({
+            field: { ref, onChange, ...inputProps },
+            fieldState: { invalid }
+          }) => (
+            <Input
+              fluid
+              type='file'
+              error={invalid}
+              onChange={(e) => {
+                setValue(e.target.value);
+                onChange(e.target.files);
+              }}
+              {...inputProps}
+              value={value}
+            />
+          )}
         />
       </Modal.Content>
       <Modal.Actions>
-        <Button color='green' inverted onClick={sendFile}>
+        <Button color='green' inverted onClick={handleSubmit(sendImage)}>
           <Icon name='checkmark' /> Отправить
         </Button>
-        <Button color='red' inverted onClick={closeModal}>
+        <Button color='red' inverted onClick={resetForm}>
           <Icon name='remove' /> Отменить
         </Button>
       </Modal.Actions>

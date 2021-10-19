@@ -1,3 +1,5 @@
+import moment from 'moment';
+
 export const declOfNum = (n, textForms) => {
   n = Math.abs(n) % 100;
   var n1 = n % 10;
@@ -85,3 +87,63 @@ export const loginInputsData = [
     }
   },
 ];
+
+export const addChannelInputsData = [
+  {
+    name: 'channelName',
+    label: 'Название канала',
+    validationRules: {
+      required: requiredText('Название канала'),
+    }
+  },
+  {
+    name: 'channelDetails',
+    label: 'Описание канала',
+    validationRules: {
+      required: requiredText('Описание канала'),
+    }
+  },
+];
+
+export const createMessageData = (userData, dispatchTime, message = null, fileURL = null) => {
+  const messageData = {
+    timestamp: dispatchTime,
+    user: {
+      id: userData.uid,
+      name: userData.displayName,
+      avatar: userData.photoURL
+    },
+  };
+
+  if (fileURL !== null) {
+    messageData.image = fileURL;
+  } else {
+    messageData.content = message;
+  }
+
+  return messageData;
+};
+
+const allowedImageTypes = [
+  'image/jpeg',
+  'image/png',
+  'image/jpg'
+];
+
+export const validateUploadImageRules = {
+  lessThan5MB: files => files[0].size < 5000000 || `Максимальный размер файла 5 MB, сейчас ${Math.abs(files[0]?.size / 1000)} MB`,
+  acceptedFormats: files =>
+    allowedImageTypes.includes(
+      files[0].type
+    ) || 'Можно загружать только файлы в формате .jpg, .png или .jpeg',
+};
+
+export const isImage = (message) => {
+  return Object.keys(message).includes('image') && !Object.keys(message).includes('content');
+};
+
+export const timeFromNow = (timestamp) => {
+  return moment(timestamp).fromNow();
+};
+
+export const isOwnMessage = (message, user) => message.user.id === user.uid;

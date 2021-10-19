@@ -31,10 +31,13 @@ import firebaseConfig from './firebaseConfig';
 const app = initializeApp(firebaseConfig);
 export const auth = getAuth();
 export const db = getDatabase();
-export const storage = getStorage(app);
+export const storage = getStorage();
 
 const dbRef = ref(db);
 const usersRef = ref(db, 'users');
+
+
+
 
 // Регистрация и вход пользователя
 export const registerOrLoginUser = async (userData, operation = 'register') => {
@@ -76,22 +79,18 @@ export const saveUserToDatabase = async (user) => {
 };
 
 // Сохранение данных в базе
-export const saveDataToDatabase = async (colName, path, savedData) => {
-  const newDataKey = push(child(dbRef, colName)).key;
+export const saveDataToDatabase = async (colName, savedData) => {
+  const dataKey = push(child(dbRef, colName)).key;
 
   if ('id' in savedData && savedData.id === '') {
-    savedData.id = newDataKey
+    savedData.id = dataKey
   }
 
-  const updates = {
-    [`${path}/${newDataKey}`]: savedData
-  };
-
-  return await update(dbRef, updates);
+  return await set(ref(db, `${colName}/${dataKey}`), savedData);
 };
 
-// Добавление слушателя, который следит за изменениями у детей
-export const childAddedListener = (path, callback) => {
+// Получение данных в реальном времени
+export const getDataInRealTime = (path, callback) => {
   const colRef = ref(db, `${path}`);
   return onValue(colRef, callback);
 };
@@ -112,15 +111,15 @@ export const dispatchTime = serverTimestamp();
 
 // Сохранение медиафайлов в Storage
 export const saveMediaFilesToStorage = (filePath, file, metadata) => {
-  const refStorage = storageRef(storage, filePath);
-  return uploadBytesResumable(refStorage, file, metadata);
+  const imagesRef = storageRef(storage, filePath);
+  return uploadBytesResumable(imagesRef, file, metadata);
 };
 
 // Получить ссылку на загруженный в Storage файл
 export const getLinkToUploadedFile = async (ref) => {
   return await getDownloadURL(ref);
 };
-// Установить наблюдателя за состоянием загрузки медиафайлов
+// Слушатель состояния загрузки файала
 export const setMediaUploadProgressWatcher = (uploadTask, progressHandling, errorHandling, successHanding) => {
   return uploadTask.on('state_changed',
     (snapshot) => {

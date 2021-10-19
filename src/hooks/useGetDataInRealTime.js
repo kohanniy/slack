@@ -1,7 +1,7 @@
 import { useEffect, useCallback, useState } from 'react';
-import { childAddedListener, removeListeners, statusUser } from '../firebase/firebaseApi';
+import { getDataInRealTime, removeListeners } from '../firebase/firebaseApi';
 
-const useChildAddedListener = (path, userId = null) => {
+const useGetDataInRealTime = (path, userId = null) => {
   const [ data, setData ] = useState([]);
 
   const handleDataAdded = useCallback((snap) => {
@@ -14,7 +14,7 @@ const useChildAddedListener = (path, userId = null) => {
   }, []);
 
   useEffect(() => {
-    childAddedListener(path, handleDataAdded);
+    getDataInRealTime(path, handleDataAdded);
 
     return () => removeListeners(path)
   }, [handleDataAdded, path]);
@@ -22,4 +22,4 @@ const useChildAddedListener = (path, userId = null) => {
   return {data, setData};
 };
 
-export default useChildAddedListener;
+export default useGetDataInRealTime;
