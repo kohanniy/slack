@@ -11,7 +11,7 @@ import {
   registerInputsData,
   loginInputsData,
 } from '../../utils/utils';
-import { Fragment } from 'react';
+
 
 function AuthForm(props) {
   const {
@@ -86,13 +86,6 @@ function AuthForm(props) {
           </Button>
         </Segment>
       </Form>
-      {/* {
-        errors && Object.keys(errors).map((fieldName, index) => (
-          <Message error key={`${index}${fieldName}`}>
-            <p>{errors[fieldName].message}</p>
-          </Message>
-        ))
-      } */}
       {
         status === 'error' && (
           <Message error>

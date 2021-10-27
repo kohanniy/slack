@@ -36,9 +36,6 @@ export const storage = getStorage();
 const dbRef = ref(db);
 const usersRef = ref(db, 'users');
 
-
-
-
 // Регистрация и вход пользователя
 export const registerOrLoginUser = async (userData, operation = 'register') => {
   const { email, password } = userData;

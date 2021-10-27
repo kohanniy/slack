@@ -6,15 +6,16 @@ import Spinner from './Spinner';
 import { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { setAuthenticationState } from './firebase/firebaseApi';
-import {
-  setUser,
-  clearUser,
-} from './actions/index';
+// import {
+//   setUser,
+//   clearUser,
+// } from './actions/index';
+import { setUser, clearUser } from './slices/userSlice';
 
 function Root() {
   const history = useHistory();
   const dispatch = useDispatch();
-  const isLoading = useSelector((state) => state.user.isLoading);
+  const status = useSelector((state) => state.user.status);
 
   useEffect(() => {
     const setUserRoute = (user) => {
@@ -30,7 +31,7 @@ function Root() {
   }, [dispatch, history]);
 
   return (
-    isLoading ? (
+    status === 'pending' ? (
       <Spinner />
     ) : (
       <Switch>

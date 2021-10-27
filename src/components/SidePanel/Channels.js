@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Button, Form, Icon, Input, Menu, Modal, Message, Label } from 'semantic-ui-react';
 import { useDispatch, useSelector } from 'react-redux';
-import { setCurrentChannel } from '../../actions/index';
+// import { setCurrentChannel } from '../../actions/index';
+import { setCurrentChannel } from '../../slices/channelSlice';
 import useGetDataInRealTime from '../../hooks/useGetDataInRealTime';
 import { useForm, Controller }  from 'react-hook-form';
 import { addChannelInputsData } from '../../utils/utils';
@@ -54,6 +55,7 @@ function Channels() {
 
   const setFirstChannel = useCallback(() => {
     const firstChannel = channels[0];
+    console.log(firstChannel);
     dispatch(setCurrentChannel(firstChannel));
     setActiveChannel(firstChannel?.id);
   }, [channels, dispatch]);
