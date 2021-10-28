@@ -1,11 +1,14 @@
 import React from 'react';
+import { useSelector } from 'react-redux';
 import { Grid, Header, Icon, Dropdown, Image } from 'semantic-ui-react';
+import { user } from '../../slices/userSlice';
 
 function UserPanel(props) {
   const {
-    currentUser,
     handleSignOut,
   } = props;
+
+  const currentUser = useSelector(user);
 
   const dropdownOptions = [
     {

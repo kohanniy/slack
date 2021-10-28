@@ -10,7 +10,6 @@ export const userSlice = createSlice({
   initialState,
   reducers: {
     setUser: (state, { payload }) => {
-      // console.log(payload);
       state.currentUser = payload;
       state.status = 'idle';
     },
@@ -21,6 +20,8 @@ export const userSlice = createSlice({
   },
 })
 
-export const { setUser, clearUser } = userSlice.actions
+export const user = (state) => state.user.currentUser;
 
-export default userSlice.reducer
+export const { setUser, clearUser } = userSlice.actions;
+
+export default userSlice.reducer;

@@ -1,19 +1,20 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Button, Form, Icon, Input, Menu, Modal, Message, Label } from 'semantic-ui-react';
 import { useDispatch, useSelector } from 'react-redux';
-// import { setCurrentChannel } from '../../actions/index';
 import { setCurrentChannel } from '../../slices/channelSlice';
 import useGetDataInRealTime from '../../hooks/useGetDataInRealTime';
 import { useForm, Controller }  from 'react-hook-form';
 import { addChannelInputsData } from '../../utils/utils';
 import useAsync from '../../hooks/useAsync';
 import { saveDataToDatabase } from '../../firebase/firebaseApi';
+import { user } from '../../slices/userSlice';
 
 function Channels() {
+
+  const currentUser = useSelector(user);
+
   const {data: channels} = useGetDataInRealTime('channels');
   const { error, isError, isLoading, isSuccess, run, reset: addChannelErrorReset } = useAsync();
-
-  const currentUser = useSelector((state) => state.user.currentUser);
   const dispatch = useDispatch();
 
   const {
@@ -55,7 +56,6 @@ function Channels() {
 
   const setFirstChannel = useCallback(() => {
     const firstChannel = channels[0];
-    console.log(firstChannel);
     dispatch(setCurrentChannel(firstChannel));
     setActiveChannel(firstChannel?.id);
   }, [channels, dispatch]);
@@ -89,7 +89,7 @@ function Channels() {
   
   return (
     <>
-      <Menu.Menu style={{ paddingBottom: '2em' }}>
+      <Menu.Menu className='menu'>
         <Menu.Item>
           <span>
             <Icon name='exchange' /> Каналы

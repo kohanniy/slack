@@ -34,7 +34,9 @@ export const db = getDatabase();
 export const storage = getStorage();
 
 const dbRef = ref(db);
-const usersRef = ref(db, 'users');
+export const usersRef = ref(db, 'users');
+const userRef = (userId) => ref(db, `users/${userId}`);
+const connectedRef = ref(db, '.info/connected');
 
 // Регистрация и вход пользователя
 export const registerOrLoginUser = async (userData, operation = 'register') => {
@@ -67,7 +69,7 @@ export const addNameAndAvatarToUserProfile = async (userData) => {
 
 // Сохранение пользователя в базе
 export const saveUserToDatabase = async (user) => {
-  return await set(ref(db, `users/${user.uid}`), {
+  return await set(userRef(user.uid), {
     uid: user.uid,
     name: user.displayName,
     avatar: user.photoURL,
@@ -116,6 +118,7 @@ export const saveMediaFilesToStorage = (filePath, file, metadata) => {
 export const getLinkToUploadedFile = async (ref) => {
   return await getDownloadURL(ref);
 };
+
 // Слушатель состояния загрузки файала
 export const setMediaUploadProgressWatcher = (uploadTask, progressHandling, errorHandling, successHanding) => {
   return uploadTask.on('state_changed',
@@ -129,25 +132,16 @@ export const setMediaUploadProgressWatcher = (uploadTask, progressHandling, erro
 };
 
 // Определение статуса пользователя: в онлайне или в оффлайне
-export const statusUser = (user) => {
-  const path = `users/${user.uid}`;
-  const myConnectionsRef = ref(db, `${path}/connections`);
-
-  // stores the timestamp of my last disconnect (the last time I was seen online)
-  const lastOnlineRef = ref(db, `${path}/lastOnline`);
-
-  const connectedRef = ref(db, '.info/connected');
+export const changeStatusUser = (userId, users) => {
+  const myConnectionsRef = userRef(userId);
   onValue(connectedRef, (snap) => {
     if (snap.val() === true) {
-      const con = push(myConnectionsRef);
-      user.status = 'online'
-      onDisconnect(con).remove();
-      set(con, true);
-      onDisconnect(lastOnlineRef).set(serverTimestamp());
+      update(myConnectionsRef, {status: 'online', lastOnline: '', ...users[userId]});
+
+      onDisconnect(myConnectionsRef).update({status: 'offline', lastOnline: serverTimestamp(),...users[userId]});
     } else {
-      user.status = 'offline'
+      update(myConnectionsRef, {status: 'offline', lastOnline: serverTimestamp(), ...users[userId]})
     }
-    return update(usersRef, user);
   });
 };
 

@@ -6,10 +6,6 @@ import Spinner from './Spinner';
 import { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { setAuthenticationState } from './firebase/firebaseApi';
-// import {
-//   setUser,
-//   clearUser,
-// } from './actions/index';
 import { setUser, clearUser } from './slices/userSlice';
 
 function Root() {
