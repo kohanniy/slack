@@ -6,6 +6,7 @@
 * React (родные и кастомные хуки)
 * React Hook Form
 * Redux Toolkit
+* Semantic UI React
 * Бэкенд - Firebase
 
 ## Планы
