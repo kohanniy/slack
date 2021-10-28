@@ -63,7 +63,7 @@ export const addNameAndAvatarToUserProfile = async (userData) => {
 
   return await updateProfile(auth.currentUser, {
     displayName: username,
-    photoURL: `http://gravatar.com/avatar/${md5(email)}?d=identicon`
+    photoURL: `https://gravatar.com/avatar/${md5(email)}?d=identicon`
   });
 };
 
